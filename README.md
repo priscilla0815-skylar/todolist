@@ -1,6 +1,6 @@
 # Todo List
 
-A responsive, dependency-free Todo List web app.
+A responsive, dependency-free Todo List web app packaged for direct veFaaS deployment.
 
 ## Features
 
@@ -11,12 +11,39 @@ A responsive, dependency-free Todo List web app.
 - Track completion progress
 - Persist data in `localStorage`
 
+## Project files
+
+- `index.html`: complete frontend application
+- `server.py`: zero-dependency production entry point
+- `vefaas-deploy.example.json`: MCP deployment parameter template
+
 ## Run locally
 
-Open `index.html` directly, or start a static server:
-
 ```bash
-python3 -m http.server 8000
+PORT=3000 python3 server.py
 ```
 
-Then visit <http://localhost:8000>.
+Then visit <http://localhost:3000>. The health endpoint is available at
+<http://localhost:3000/healthz>.
+
+## Build deployment package
+
+Run from the project directory:
+
+```bash
+mkdir -p dist
+zip -X -j dist/todolist-deploy.zip index.html server.py README.md
+openssl base64 -A \
+  -in dist/todolist-deploy.zip \
+  -out dist/todolist-deploy.zip.base64.txt
+```
+
+Use the Base64 file contents as the MCP deployment tool's `source` value.
+The matching deployment settings are:
+
+```text
+runtime: native-python3.12/v1
+start_command: python3 server.py
+port: 3000
+output_path: ./
+```

@@ -1,0 +1,16 @@
+{
+  "name": "todolist-app",
+  "gateway_name": "your-gateway-name",
+  "source_type": "zip",
+  "source": "<paste dist/todolist-deploy.zip.base64.txt here>",
+  "runtime": "native-python3.12/v1",
+  "start_command": "python3 server.py",
+  "port": 3000,
+  "output_path": "./",
+  "memory_mb": 1024,
+  "cpu_milli": 500,
+  "request_timeout": 300,
+  "max_concurrency": 100,
+  "wait_timeout_seconds": 600,
+  "rollback_on_failure": false
+}
