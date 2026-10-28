@@ -1,0 +1,80 @@
+name: Build container image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/container-image.yml"
+      - ".dockerignore"
+      - "Dockerfile"
+      - "index.html"
+      - "server.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Linux AMD64 image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "ghcr.io/${GITHUB_REPOSITORY,,}:latest" \
+            --tag "ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" \
+            .
+
+      - name: Smoke test image
+        run: |
+          container_id=$(docker run -d -p 127.0.0.1:3000:3000 "ghcr.io/${GITHUB_REPOSITORY,,}:latest")
+          trap 'docker rm -f "$container_id"' EXIT
+
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent http://127.0.0.1:3000/healthz | grep -q '"status": "ok"'; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker logs "$container_id"
+          exit 1
+
+      - name: Export image archive
+        run: |
+          mkdir -p dist
+          docker save "ghcr.io/${GITHUB_REPOSITORY,,}:latest" |
+            gzip -9 > dist/todolist-image-linux-amd64.tar.gz
+          shasum -a 256 dist/todolist-image-linux-amd64.tar.gz \
+            > dist/todolist-image-linux-amd64.tar.gz.sha256
+
+      - name: Upload image archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: todolist-image-linux-amd64
+          path: |
+            dist/todolist-image-linux-amd64.tar.gz
+            dist/todolist-image-linux-amd64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        run: |
+          docker push "ghcr.io/${GITHUB_REPOSITORY,,}:latest"
+          docker push "ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"

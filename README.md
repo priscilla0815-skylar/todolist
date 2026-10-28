@@ -15,6 +15,7 @@ A responsive, dependency-free Todo List web app packaged for direct veFaaS deplo
 
 - `index.html`: complete frontend application
 - `server.py`: zero-dependency production entry point
+- `Dockerfile`: production container image definition
 - `vefaas-deploy.example.json`: MCP deployment parameter template
 
 ## Run locally
@@ -46,4 +47,28 @@ runtime: native-python3.12/v1
 start_command: python3 server.py
 port: 3000
 output_path: ./
+```
+
+## Container image
+
+The GitHub Actions workflow builds and smoke-tests a Linux AMD64 image. It
+publishes the image to:
+
+```text
+ghcr.io/priscilla0815-skylar/todolist:latest
+```
+
+Each successful workflow run also provides a downloadable
+`todolist-image-linux-amd64.tar.gz` artifact. Load the archive locally with:
+
+```bash
+gzip -dc todolist-image-linux-amd64.tar.gz | docker load
+```
+
+For MCP deployment, use:
+
+```text
+source_type: image
+source: ghcr.io/priscilla0815-skylar/todolist:latest
+port: 3000
 ```
