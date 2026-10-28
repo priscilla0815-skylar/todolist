@@ -55,7 +55,7 @@ The GitHub Actions workflow builds and smoke-tests a Linux AMD64 image. It
 publishes the image to:
 
 ```text
-ghcr.io/priscilla0815-skylar/todolist:latest
+ghcr.io/priscilla0815-skylar/todolist-app:latest
 ```
 
 Each successful workflow run also provides a downloadable
@@ -69,6 +69,6 @@ For MCP deployment, use:
 
 ```text
 source_type: image
-source: ghcr.io/priscilla0815-skylar/todolist:latest
+source: ghcr.io/priscilla0815-skylar/todolist-app:latest
 port: 3000
 ```

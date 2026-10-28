@@ -30,13 +30,13 @@ jobs:
             --platform linux/amd64 \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --tag "ghcr.io/${GITHUB_REPOSITORY,,}:latest" \
-            --tag "ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" \
+            --tag "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:latest" \
+            --tag "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:${GITHUB_SHA}" \
             .
 
       - name: Smoke test image
         run: |
-          container_id=$(docker run -d -p 127.0.0.1:3000:3000 "ghcr.io/${GITHUB_REPOSITORY,,}:latest")
+          container_id=$(docker run -d -p 127.0.0.1:3000:3000 "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:latest")
           trap 'docker rm -f "$container_id"' EXIT
 
           for attempt in 1 2 3 4 5; do
@@ -52,7 +52,7 @@ jobs:
       - name: Export image archive
         run: |
           mkdir -p dist
-          docker save "ghcr.io/${GITHUB_REPOSITORY,,}:latest" |
+          docker save "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:latest" |
             gzip -9 > dist/todolist-image-linux-amd64.tar.gz
           shasum -a 256 dist/todolist-image-linux-amd64.tar.gz \
             > dist/todolist-image-linux-amd64.tar.gz.sha256
@@ -76,5 +76,5 @@ jobs:
 
       - name: Push image
         run: |
-          docker push "ghcr.io/${GITHUB_REPOSITORY,,}:latest"
-          docker push "ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
+          docker push "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:latest"
+          docker push "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/todolist-app:${GITHUB_SHA}"
